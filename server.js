@@ -14,13 +14,14 @@ server.listen(PORT ,() => {
 
 wsServer.on("connection", (socket) => {
     console.log("Client has connected")
+    console.log("Clients: ", wsServer.clients.length)
     socket.send("hello from the the server side")
     socket.on("message", (data) => {
         const {type, payload} = JSON.parse(data)
         const zeroOrOne = Math.floor(Math.random() * 2)
         switch(type) {
             case CLIENT.MESSAGES.NEW_USER:
-                clientsInServer++
+                clientsInServer = wsServer.clients.length
                 socket.send(JSON.stringify({type: SERVER.MESSAGES.SERVER_INFO, payload: {clientsInServer}}))
                 broadcast({type: SERVER.MESSAGES.SERVER_INFO, payload: {clientsInServer}}, socket)
                 break;
