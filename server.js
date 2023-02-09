@@ -14,14 +14,15 @@ server.listen(PORT ,() => {
 
 wsServer.on("connection", (socket) => {
     console.log("Client has connected")
-    console.log("Clients: ", wsServer.clients.length)
+    console.log("Clients: ", wsServer.clients.size)
+    console.log("rooms ", publicGames.length)
     socket.send("hello from the the server side")
     socket.on("message", (data) => {
         const {type, payload} = JSON.parse(data)
         const zeroOrOne = Math.floor(Math.random() * 2)
         switch(type) {
             case CLIENT.MESSAGES.NEW_USER:
-                clientsInServer = wsServer.clients.length
+                clientsInServer = wsServer.clients.size
                 socket.send(JSON.stringify({type: SERVER.MESSAGES.SERVER_INFO, payload: {clientsInServer}}))
                 broadcast({type: SERVER.MESSAGES.SERVER_INFO, payload: {clientsInServer}}, socket)
                 break;
@@ -78,7 +79,6 @@ const findGame = (socket) => {
             publicGames.push(room)
             message.payload.role = roles[0]
         }
-        console.log(publicGames)
     }
     socket.send(JSON.stringify(message))
 }
@@ -93,7 +93,6 @@ function broadcast(message, socketToOmit) {
 
 function broadcastGame(message, socketToOmit, broadcastToAll = false) {
     let room = publicGames.find((room) => room.clients.includes(socketToOmit))
-    console.log(room)
     room.clients.forEach((connectedClient) => {
         if(broadcastToAll) {
             connectedClient.send(JSON.stringify(message))
@@ -110,11 +109,9 @@ function leaveGame(socket) {
     for(let i = 0; i < publicGames.length; i++) {
         let room = publicGames[i]
         if(room.clients.includes(socket)) {
-            console.log(room)
             publicGames.splice(i,1)
             // room.roles = []
             // room.clients = []
-            console.log(room)
             break;
         }
     }
@@ -136,7 +133,6 @@ function findOrCreateGameByPin(socket, pin) {
             room.roles.push(roles[1])
             room.clients.push(socket)
             publicGames.splice(publicGames.indexOf(room), 1, room)
-            console.log(publicGames)
             message.payload.role = roles[1]
             message.payload.start = true
         }
